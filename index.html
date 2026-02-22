@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alo's Package Delivery — Wanamaker House's Delivery Pro</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600;1,9..144,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ════════════════════════════════════════
+       CUSTOM PROPERTIES
+    ════════════════════════════════════════ */
+    :root {
+      --sky:         #1A6FD4;
+      --sky-dark:    #0F4A9C;
+      --sky-light:   #5BA3F5;
+      --sky-pale:    #EBF4FF;
+      --burst:       #F57C28;
+      --burst-dark:  #D4611A;
+      --burst-light: #FDECD8;
+      --ink:         #1A2233;
+      --ink-mid:     #445069;
+      --ink-light:   #8496B0;
+      --surface:     #FFFFFF;
+      --elevated:    #F4F8FF;
+
+      --shadow-card:
+        0 1px 2px rgba(26,111,212,0.05),
+        0 4px 14px rgba(26,111,212,0.08),
+        0 18px 40px rgba(26,111,212,0.07);
+      --shadow-cta:
+        0 2px 8px rgba(245,124,40,0.26),
+        0 8px 24px rgba(245,124,40,0.18);
+      --shadow-cta-hover:
+        0 4px 14px rgba(245,124,40,0.36),
+        0 16px 40px rgba(245,124,40,0.22);
+      --shadow-photo:
+        0 4px 18px rgba(15,74,156,0.18),
+        0 18px 52px rgba(15,74,156,0.20),
+        0 44px 88px rgba(15,74,156,0.14);
+      --shadow-form:
+        0 8px 36px rgba(10,30,80,0.22),
+        0 36px 88px rgba(10,30,80,0.26);
+
+      --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* ════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 1.0625rem;
+      line-height: 1.75 !important;
+      color: var(--ink);
+      background-color: var(--sky-pale);
+      background-image:
+        radial-gradient(ellipse 90% 55% at 5% 0%,   rgba(91,163,245,0.22)  0%, transparent 62%),
+        radial-gradient(ellipse 55% 45% at 95% 18%,  rgba(245,124,40,0.09)  0%, transparent 52%),
+        radial-gradient(ellipse 65% 55% at 50% 108%, rgba(26,111,212,0.12)  0%, transparent 72%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grain texture via inline SVG data URI */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.030;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* ════════════════════════════════════════
+       TYPOGRAPHY
+    ════════════════════════════════════════ */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6.5vw, 5.25rem) !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: clamp(2.75rem, 6vw, 4.5rem) !important;
+      font-weight: 700 !important;
+    }
+
+    h3 {
+      font-size: 1.25rem !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.02em;
+    }
+
+    p { line-height: 1.75; }
+
+    .eyebrow {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--burst);
+    }
+
+    /* ════════════════════════════════════════
+       LAYOUT
+    ════════════════════════════════════════ */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    @media (min-width: 640px)  { .container { padding: 0 40px; } }
+    @media (min-width: 1280px) { .container { padding: 0 48px; } }
+
+    section { padding: 72px 0; }
+    @media (min-width: 768px) { section { padding: 100px 0; } }
+
+    /* ════════════════════════════════════════
+       ANIMATIONS  (transform + opacity only)
+    ════════════════════════════════════════ */
+    @keyframes float-photo {
+      0%   { transform: rotate(2.5deg) translateY(0px); }
+      100% { transform: rotate(2.5deg) translateY(-14px); }
+    }
+
+    @keyframes drift-a {
+      0%   { transform: translateY(0px)   rotate(0deg);  opacity: 0.055; }
+      100% { transform: translateY(-24px) rotate(11deg); opacity: 0.032; }
+    }
+    @keyframes drift-b {
+      0%   { transform: translateY(0px)   rotate(-7deg); opacity: 0.042; }
+      100% { transform: translateY(-18px) rotate(5deg);  opacity: 0.026; }
+    }
+    @keyframes drift-c {
+      0%   { transform: translateY(0px)   rotate(14deg); opacity: 0.038; }
+      100% { transform: translateY(-20px) rotate(26deg); opacity: 0.022; }
+    }
+
+    @keyframes pulse-orb {
+      0%, 100% { transform: scale(1);    opacity: 0.13; }
+      50%       { transform: scale(1.07); opacity: 0.19; }
+    }
+
+    /* Reveal system */
+    .reveal {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0px);
+      transition:
+        opacity  0.65s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ════════════════════════════════════════
+       NAVIGATION
+    ════════════════════════════════════════ */
+    #main-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(235, 244, 255, 0.84);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(26, 111, 212, 0.10);
+      transition: box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #main-nav.scrolled {
+      box-shadow: 0 4px 32px rgba(26,111,212,0.10), 0 1px 4px rgba(26,111,212,0.06);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-wordmark {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .nav-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--sky);
+      letter-spacing: -0.025em;
+    }
+
+    /* ════════════════════════════════════════
+       BUTTONS
+    ════════════════════════════════════════ */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 22px;
+      background: var(--burst);
+      color: #fff;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      letter-spacing: -0.01em;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow-cta);
+      text-decoration: none;
+      transition:
+        background-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow       0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        transform        0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .btn-primary:hover        { background: var(--burst-dark); box-shadow: var(--shadow-cta-hover); transform: translateY(-2px); }
+    .btn-primary:active       { transform: translateY(0); box-shadow: var(--shadow-cta); }
+    .btn-primary:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+
+    .btn-primary-lg { padding: 15px 30px; font-size: 1.0625rem; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 22px;
+      background: transparent;
+      color: var(--sky);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      letter-spacing: -0.01em;
+      border-radius: 999px;
+      border: 1.75px solid var(--sky);
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        color            0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        transform        0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .btn-secondary:hover        { background: var(--sky); color: #fff; transform: translateY(-2px); }
+    .btn-secondary:active       { transform: translateY(0); }
+    .btn-secondary:focus-visible { outline: 3px solid var(--burst); outline-offset: 3px; }
+
+    /* ════════════════════════════════════════
+       CARDS
+    ════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid rgba(26, 111, 212, 0.09);
+      box-shadow: var(--shadow-card);
+      padding: 32px;
+    }
+
+    /* ════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════ */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (min-width: 800px) {
+      .hero-grid { grid-template-columns: 55fr 45fr; gap: 64px; }
+    }
+
+    .photo-card {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow-photo);
+      max-width: 420px;
+      width: 100%;
+    }
+
+    @media (min-width: 800px) {
+      .photo-card {
+        max-width: 100%;
+        animation: float-photo 5.5s ease-in-out infinite alternate;
+      }
+    }
+
+    .photo-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      object-position: center center;
+    }
+
+    @media (min-width: 800px) {
+      .photo-card img { height: 540px; }
+    }
+
+    /* ════════════════════════════════════════
+       STEPS / HOW IT WORKS
+    ════════════════════════════════════════ */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+        position: relative;
+      }
+
+      /* Dashed connector line between steps */
+      .steps-grid::before {
+        content: '';
+        position: absolute;
+        top: 58px;
+        left:  calc(33.333% - 16px);
+        right: calc(33.333% - 16px);
+        height: 2px;
+        background-image: repeating-linear-gradient(
+          90deg,
+          var(--sky-light) 0,
+          var(--sky-light) 8px,
+          transparent 8px,
+          transparent 20px
+        );
+        opacity: 0.55;
+        z-index: 0;
+        pointer-events: none;
+      }
+    }
+
+    .step-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid rgba(26,111,212,0.09);
+      box-shadow: var(--shadow-card);
+      padding: 36px 94px 36px 36px;
+    }
+
+    .step-num {
+      position: absolute;
+      top: 10px;
+      left: 16px;
+      font-family: var(--font-display);
+      font-size: 6.5rem;
+      font-weight: 900;
+      color: var(--sky-light);
+      opacity: 0.18;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .step-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--sky-pale);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sky);
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 1;
+    }
+
+    /* ════════════════════════════════════════
+       HOURS
+    ════════════════════════════════════════ */
+    .hours-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 600px) {
+      .hours-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .hours-time {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--sky);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .hours-ampm {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      opacity: 0.65;
+    }
+
+    .hours-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--ink-light);
+      margin-bottom: 5px;
+    }
+
+    .hours-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+
+    .hours-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(26,111,212,0.12);
+    }
+
+    /* ════════════════════════════════════════
+       FORM
+    ════════════════════════════════════════ */
+    .names-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 480px) {
+      .names-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--ink);
+      margin-bottom: 7px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid rgba(26,111,212,0.22);
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--ink);
+      background: #ffffff;
+      outline: none;
+      transition:
+        border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .form-input::placeholder { color: var(--ink-light); }
+
+    .form-input:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3.5px rgba(26,111,212,0.14);
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
+
+    /* ── Service-type radio cards ─────────────── */
+    .service-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .service-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      border: 1.5px solid rgba(26,111,212,0.22);
+      border-radius: 12px;
+      cursor: pointer;
+      background: #fff;
+      transition:
+        border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow   0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        background   0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .service-option:hover {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(26,111,212,0.08);
+    }
+
+    .service-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .service-radio {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(26,111,212,0.35);
+      margin-top: 3px;
+      position: relative;
+      transition:
+        border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .service-radio::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: var(--sky);
+      opacity: 0;
+      transform: scale(0.4);
+      transition:
+        opacity   0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .service-option:has(input:checked) {
+      border-color: var(--sky);
+      background: var(--sky-pale);
+      box-shadow: 0 0 0 3px rgba(26,111,212,0.10);
+    }
+
+    .service-option:has(input:checked) .service-radio {
+      border-color: var(--sky);
+    }
+
+    .service-option:has(input:checked) .service-radio::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .service-option-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: var(--ink);
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+    }
+
+    .service-option-desc {
+      display: block;
+      margin-top: 4px;
+      font-family: var(--font-body);
+      font-size: 0.8125rem;
+      color: var(--ink-mid);
+      line-height: 1.6;
+    }
+
+    /* ── Validation error states ──────────────── */
+    .form-input.error {
+      border-color: #d93025;
+      background: #fff8f8;
+    }
+
+    .form-input.error:focus {
+      border-color: #d93025;
+      box-shadow: 0 0 0 3.5px rgba(217,48,37,0.13);
+    }
+
+    .service-options.error .service-option {
+      border-color: rgba(217,48,37,0.30);
+    }
+
+    .field-error {
+      display: none;
+      margin-top: 6px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #c0271d;
+      letter-spacing: 0.01em;
+    }
+
+    .field-error.show { display: block; }
+
+    .btn-submit {
+      display: block;
+      width: 100%;
+      padding: 17px 32px;
+      background: var(--burst);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow-cta);
+      transition:
+        background-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow       0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        transform        0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .btn-submit:hover        { background: var(--burst-dark); box-shadow: var(--shadow-cta-hover); transform: translateY(-2px); }
+    .btn-submit:active       { transform: translateY(0); box-shadow: var(--shadow-cta); }
+    .btn-submit:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+
+    /* ════════════════════════════════════════
+       FORM SUCCESS STATE
+    ════════════════════════════════════════ */
+    .form-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-fields {
+      transition:
+        opacity  0.38s ease,
+        transform 0.38s ease;
+    }
+
+    .form-fields.hide {
+      opacity: 0;
+      transform: translateY(-18px);
+      pointer-events: none;
+    }
+
+    .form-success {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 32px;
+      opacity: 0;
+      transform: translateY(18px);
+      pointer-events: none;
+      transition:
+        opacity  0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .form-success.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* ════════════════════════════════════════
+       NAV TEXT LINK
+    ════════════════════════════════════════ */
+    .nav-text-link {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      opacity: 0.60;
+      letter-spacing: 0.01em;
+      transition: opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .nav-text-link:hover        { opacity: 1; }
+    .nav-text-link:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; border-radius: 3px; }
+
+    /* ════════════════════════════════════════
+       ABOUT ME SECTION
+    ════════════════════════════════════════ */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (min-width: 720px) {
+      .about-grid { grid-template-columns: 1fr 1fr; gap: 72px; }
+    }
+
+    .about-photo {
+      width: 100%;
+      max-width: 400px;
+      display: block;
+      margin: 0 auto;
+      border-radius: 22px;
+      transform: rotate(1.5deg);
+      box-shadow:
+        0 2px 6px rgba(26,111,212,0.07),
+        0 10px 32px rgba(26,111,212,0.13),
+        0 28px 72px rgba(26,111,212,0.11);
+    }
+
+    /* ════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════ */
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    @media (min-width: 720px) {
+      .footer-inner {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-align: left;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════
+       NAVIGATION
+  ════════════════════════════════════════ -->
+  <nav id="main-nav">
+    <div class="container">
+      <div class="nav-inner">
+
+        <a href="#" class="nav-logo" aria-label="Alo's Package Delivery — Home">
+          <svg width="36" height="36" viewBox="0 0 256 256" aria-hidden="true">
+            <path fill="#1A6FD4" d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15Z"/>
+            <path fill="#1A6FD4" d="M40,90l80,43.78v85.79L40,175.82Z"/>
+            <path fill="#1A6FD4" d="M216,175.78l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90Z"/>
+            <path fill="#F57C28" d="M128,32l80.34,44-29.77,16.3-80.35-44Z"/>
+            <path fill="#F57C28" d="M128,120L47.66,76l33.9-18.56 80.34,44Z"/>
+          </svg>
+
+          <div class="nav-wordmark">
+            <span class="nav-name">Alo's Package Delivery</span>
+          </div>
+        </a>
+
+        <a href="#about" class="nav-text-link">About Me</a>
+
+        <a href="#notify" class="btn-primary">
+          Request a Delivery
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 6.5h8M8 3.5l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ════════════════════════════════════════
+       HERO
+  ════════════════════════════════════════ -->
+  <section id="hero" style="padding-top: 72px; padding-bottom: 88px; position: relative; overflow: hidden;">
+
+    <!-- Floating background package outlines -->
+    <div aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;">
+      <svg width="96" height="96" viewBox="0 0 96 96" fill="none" style="position:absolute; top:6%; right:2%; animation: drift-a 8s ease-in-out infinite alternate;">
+        <rect x="10" y="44" width="76" height="42" rx="6" stroke="#1A6FD4" stroke-width="3.2" fill="none"/>
+        <line x1="10" y1="62" x2="86" y2="62" stroke="#1A6FD4" stroke-width="2.4" stroke-opacity="0.5"/>
+        <rect x="36" y="44" width="24" height="42" fill="rgba(26,111,212,0.05)"/>
+        <path d="M26 44V29C26 26.8 27.8 25 30 25H48L49 44" stroke="#F57C28" stroke-width="2.8" stroke-linejoin="round" fill="none"/>
+        <path d="M70 44V29C70 26.8 68.2 25 66 25H48L47 44" stroke="#F57C28" stroke-width="2.8" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="position:absolute; bottom:12%; left:1.5%; animation: drift-b 11s ease-in-out infinite alternate;">
+        <rect x="8" y="30" width="48" height="26" rx="4.5" stroke="#1A6FD4" stroke-width="2.4" fill="none"/>
+        <line x1="8" y1="41" x2="56" y2="41" stroke="#1A6FD4" stroke-width="1.8" stroke-opacity="0.5"/>
+        <path d="M18 30V22C18 20.3 19.3 19 21 19H32L33 30" stroke="#F57C28" stroke-width="2.1" stroke-linejoin="round" fill="none"/>
+        <path d="M46 30V22C46 20.3 44.7 19 43 19H32L31 30" stroke="#F57C28" stroke-width="2.1" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" style="position:absolute; top:60%; right:7%; animation: drift-c 13s ease-in-out infinite alternate;">
+        <rect x="6" y="24" width="40" height="22" rx="3.5" stroke="#1A6FD4" stroke-width="2" fill="none"/>
+        <line x1="6" y1="33" x2="46" y2="33" stroke="#1A6FD4" stroke-width="1.5" stroke-opacity="0.5"/>
+        <path d="M14 24V18C14 16.9 14.9 16 16 16H26L27 24" stroke="#F57C28" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+        <path d="M38 24V18C38 16.9 37.1 16 36 16H26L25 24" stroke="#F57C28" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="container" style="position:relative; z-index:1;">
+      <div class="hero-grid">
+
+        <!-- Left: Text -->
+        <div class="reveal">
+          <div class="eyebrow" style="margin-bottom:17px;">The Wanamaker House Delivery Pro</div>
+          <h1>
+            Packages Delivered.<br>
+            <span style="color:var(--sky);">Right to Your Door.</span>
+          </h1>
+          <p style="margin-top:22px; font-size:1.125rem; color:var(--ink-mid); max-width:450px; line-height:1.7;">
+            Hi, I'm Alo — I pick up your packages from the Wanamaker House lobby and deliver them right to your apartment door. Fast, friendly, and totally reliable.
+          </p>
+          <div style="margin-top:36px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;">
+            <a href="#notify" class="btn-primary btn-primary-lg">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true">
+                <rect x="2" y="4" width="13" height="10" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.15"/>
+                <path d="M2 6.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Request a Delivery Now
+            </a>
+            <a href="#hours" class="btn-secondary" style="font-size:1rem; padding:13px 26px;">
+              See My Hours
+            </a>
+          </div>
+          <div style="margin-top:26px; display:flex; align-items:center; gap:9px; color:var(--ink-mid); font-size:0.875rem;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="var(--burst)" fill-opacity="0.14"/>
+              <path d="M5.5 10.5l3 3 5.5-6" stroke="var(--burst)" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Proudly serving Wanamaker House residents
+          </div>
+        </div>
+
+        <!-- Right: Photo -->
+        <div class="reveal" style="display:flex; justify-content:center; align-items:center; position:relative;">
+          <!-- Decorative orbs -->
+          <div aria-hidden="true" style="position:absolute; bottom:-20px; left:-10px; width:150px; height:150px; border-radius:50%; background:var(--burst); animation:pulse-orb 7s ease-in-out infinite; z-index:0;"></div>
+          <div aria-hidden="true" style="position:absolute; top:-14px; right:-14px; width:88px; height:88px; border-radius:50%; background:var(--sky-light); opacity:0.20; z-index:0;"></div>
+
+          <div class="photo-card" style="z-index:1;">
+            <div style="position:relative;">
+              <img
+                src="brand_assets/Alo_Pic.jpg"
+                alt="Alo Dubin, owner of Alo's Package Delivery, smiling in front of a colorful wall of streamers"
+                style="display:block; width:100%; object-fit:cover; object-position:center center;"
+              >
+              <!-- Gradient overlay -->
+              <div aria-hidden="true" style="position:absolute; inset:0; background:linear-gradient(to top, rgba(10,26,72,0.66) 0%, rgba(10,26,72,0.14) 42%, transparent 68%); pointer-events:none;"></div>
+              <!-- Color wash -->
+              <div aria-hidden="true" style="position:absolute; inset:0; background:rgba(18,72,175,0.09); mix-blend-mode:multiply; pointer-events:none;"></div>
+              <!-- Caption -->
+              <div style="position:absolute; bottom:22px; left:22px; right:22px;">
+                <div style="font-family:var(--font-display); font-size:1.3rem; font-weight:700; color:#fff; letter-spacing:-0.025em; line-height:1.2;">Alo Dubin</div>
+                <div style="font-family:var(--font-body); font-size:0.8125rem; color:rgba(255,255,255,0.76); margin-top:3px;">Founder & Chief Delivery Officer · Age 10</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       HOW IT WORKS
+  ════════════════════════════════════════ -->
+  <section id="how-it-works">
+    <div class="container">
+
+      <div style="text-align:center; margin-bottom:56px;">
+        <div class="eyebrow reveal">Convenient &amp; Reliable</div>
+        <h2 class="reveal" style="margin-top:12px; font-style:italic;">Here's How It Works</h2>
+      </div>
+
+      <div class="steps-grid">
+
+        <!-- Step 1 -->
+        <div class="step-card reveal">
+          <div class="step-num" aria-hidden="true">1</div>
+          <div class="step-icon">
+            <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden="true">
+              <!-- Body: blue hex shell + left/right faces -->
+              <path fill="#1A6FD4" d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15Z"/>
+              <path fill="#1A6FD4" d="M40,90l80,43.78v85.79L40,175.82Z"/>
+              <path fill="#1A6FD4" d="M216,175.78l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90Z"/>
+              <!-- Accent: orange top face + middle stripe -->
+              <path fill="#F57C28" d="M128,32l80.34,44-29.77,16.3-80.35-44Z"/>
+              <path fill="#F57C28" d="M128,120L47.66,76l33.9-18.56 80.34,44Z"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom:10px; position:relative; z-index:1;">Package Arrives</h3>
+          <p style="color:var(--ink-mid); font-size:0.9375rem; position:relative; z-index:1;">Your package arrives at the Wanamaker House lobby, and you alert Alo by submitting the <a href="#notify" style="color:var(--sky); font-weight:600; text-decoration:underline; text-decoration-color:rgba(26,111,212,0.35); text-underline-offset:2px; transition:text-decoration-color 0.18s ease;" onmouseover="this.style.textDecorationColor='rgba(26,111,212,0.9)'" onmouseout="this.style.textDecorationColor='rgba(26,111,212,0.35)'">delivery request form</a>.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card reveal">
+          <div class="step-num" aria-hidden="true">2</div>
+          <div class="step-icon">
+            <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden="true">
+              <!-- Head ring: orange -->
+              <path fill="#F57C28" d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56Z"/>
+              <!-- Body + arms: blue -->
+              <path fill="#1A6FD4" d="M231.5,87.71A19.62,19.62,0,0,0,212,72H44a20,20,0,0,0-8.38,38.16l.13,0,50.75,22.35-21,79.72A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.4-16.52l-21-79.72,50.75-22.35.13,0A19.64,19.64,0,0,0,231.5,87.71Z"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom:10px; position:relative; z-index:1;">Alo Gets to Work</h3>
+          <p style="color:var(--ink-mid); font-size:0.9375rem; position:relative; z-index:1;">During service hours, Alo heads to the lobby, retrieves your package, and hops in the elevator headed your way.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card reveal">
+          <div class="step-num" aria-hidden="true">3</div>
+          <div class="step-icon">
+            <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden="true">
+              <!-- Building frame: blue -->
+              <path fill="#1A6FD4" d="M232,216H208V40a16,16,0,0,0-16-16H64A16,16,0,0,0,48,40V216H24a8,8,0,0,0,0,16H232a8,8,0,0,0,0-16Z"/>
+              <!-- Door panel: light blue inset -->
+              <path fill="rgba(255,255,255,0.22)" d="M64,40H192V216H64Z"/>
+              <!-- Knob: orange -->
+              <circle fill="#F57C28" cx="168" cy="132" r="12"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom:10px; position:relative; z-index:1;">Delivered to You</h3>
+          <p style="color:var(--ink-mid); font-size:0.9375rem; position:relative; z-index:1;">Your package arrives right at your apartment door. No elevator trips, no waiting — just knock-knock, it's Alo!</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       PRICING
+  ════════════════════════════════════════ -->
+  <section id="pricing">
+    <div class="container">
+      <div style="max-width:680px; margin:0 auto; text-align:center;">
+
+        <div class="eyebrow reveal">Simple &amp; Fair</div>
+        <h2 class="reveal" style="margin-top:12px; margin-bottom:48px;">Pricing</h2>
+
+        <div class="reveal" style="background:var(--surface); border-radius:24px; border:1px solid rgba(26,111,212,0.09); box-shadow:var(--shadow-card); padding:52px 44px; position:relative; overflow:hidden;">
+          <div aria-hidden="true" style="position:absolute; top:10px; left:20px; font-family:var(--font-display); font-size:10rem; font-weight:900; color:var(--sky-light); opacity:0.12; line-height:1; user-select:none; pointer-events:none; letter-spacing:-0.05em;">$</div>
+          <div style="position:relative; z-index:1;">
+            <div style="display:flex; align-items:flex-start; justify-content:center; gap:6px; margin-bottom:10px;">
+              <span style="font-family:var(--font-display); font-size:1.5rem; font-weight:700; color:var(--sky); margin-top:14px; letter-spacing:-0.02em;">$</span>
+              <span style="font-family:var(--font-display); font-size:6rem; font-weight:900; color:var(--sky); letter-spacing:-0.05em; line-height:1;">1</span>
+              <div style="display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:10px; align-self:flex-end;">
+                <span style="font-family:var(--font-body); font-size:1rem; font-weight:500; color:var(--ink-mid); line-height:1.3;">per<br>package</span>
+              </div>
+            </div>
+            <p style="color:var(--ink-mid); font-size:1rem; max-width:380px; margin:0 auto 28px; line-height:1.7;">One flat rate, no matter how big the box or how high your floor.</p>
+            <div style="display:inline-flex; align-items:center; gap:8px; background:var(--burst-light); border:1px solid rgba(245,124,40,0.22); border-radius:999px; padding:10px 20px;">
+              <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <rect x="1.5" y="4.5" width="15" height="10" rx="2" stroke="var(--burst-dark)" stroke-width="1.6" fill="var(--burst)" fill-opacity="0.12"/>
+                <circle cx="9" cy="9.5" r="2.5" stroke="var(--burst-dark)" stroke-width="1.4"/>
+                <circle cx="3.5" cy="7" r="0.75" fill="var(--burst-dark)"/>
+                <circle cx="14.5" cy="12" r="0.75" fill="var(--burst-dark)"/>
+              </svg>
+              <span style="font-family:var(--font-body); font-size:0.8125rem; font-weight:600; color:var(--burst-dark);">Cash preferred — exact change appreciated!</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       HOURS
+  ════════════════════════════════════════ -->
+  <section id="hours">
+    <div class="container">
+      <div style="max-width:740px; margin:0 auto;">
+
+        <div style="text-align:center; margin-bottom:48px;">
+          <div class="eyebrow reveal">When I'm Working</div>
+          <h2 class="reveal" style="margin-top:12px;">Service Hours</h2>
+        </div>
+
+        <div class="hours-grid">
+
+          <!-- Weekday card -->
+          <div class="card reveal">
+            <div style="display:flex; align-items:center; gap:11px; margin-bottom:26px;">
+              <div style="width:40px; height:40px; border-radius:11px; background:var(--sky-pale); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--sky);">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.08"/>
+                  <path d="M2 8h16" stroke="currentColor" stroke-width="1.35" stroke-opacity="0.45"/>
+                  <rect x="6" y="2" width="2" height="4" rx="1" fill="currentColor"/>
+                  <rect x="12" y="2" width="2" height="4" rx="1" fill="currentColor"/>
+                  <rect x="5.5" y="11" width="2.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity="0.7"/>
+                  <rect x="9" y="11" width="2.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity="0.7"/>
+                </svg>
+              </div>
+              <h3 style="font-size:1.4rem;">Weekdays</h3>
+            </div>
+
+            <div>
+              <div class="hours-label">Evening</div>
+              <div class="hours-time">6:00<span class="hours-ampm"> pm</span> – 8:00<span class="hours-ampm"> pm</span></div>
+            </div>
+          </div>
+
+          <!-- Weekend card -->
+          <div class="reveal" style="background:var(--burst-light); border-radius:20px; border:1px solid rgba(245,124,40,0.18); box-shadow:0 1px 3px rgba(245,124,40,0.06), 0 6px 20px rgba(245,124,40,0.11), 0 20px 48px rgba(245,124,40,0.08); padding:32px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:26px; gap:10px;">
+              <div style="display:flex; align-items:center; gap:11px;">
+                <div style="width:40px; height:40px; border-radius:11px; background:rgba(245,124,40,0.14); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--burst-dark);">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.14"/>
+                    <path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4.1 4.1l1.4 1.4M14.5 14.5l1.4 1.4M4.1 15.9l1.4-1.4M14.5 5.5l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <h3 style="font-size:1.4rem; color:var(--ink);">Weekends</h3>
+              </div>
+              <span style="background:var(--burst); color:#fff; font-family:var(--font-body); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.10em; padding:5px 12px; border-radius:999px; white-space:nowrap; flex-shrink:0;">More Hours!</span>
+            </div>
+
+            <div>
+              <div class="hours-label" style="color:rgba(212,97,26,0.65);">All Day</div>
+              <div class="hours-time" style="color:var(--burst-dark); font-size:1.75rem;">8:00<span class="hours-ampm" style="color:inherit;"> am</span> – 8:30<span class="hours-ampm" style="color:inherit;"> pm</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="reveal" style="text-align:center; margin-top:24px; color:var(--ink-light); font-size:0.875rem; font-style:italic;">
+          Hours may vary on school holidays and special occasions.
+        </p>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       NOTIFICATION FORM
+  ════════════════════════════════════════ -->
+  <section id="notify" style="background:var(--sky); position:relative; overflow:hidden; padding:96px 0;">
+
+    <!-- Depth overlays on blue background -->
+    <div aria-hidden="true" style="position:absolute; inset:0; pointer-events:none;">
+      <div style="position:absolute; top:-35%; left:-20%; width:70%; height:100%; border-radius:50%; background:radial-gradient(ellipse, rgba(91,163,245,0.38) 0%, transparent 70%);"></div>
+      <div style="position:absolute; bottom:-45%; right:-18%; width:78%; height:100%; border-radius:50%; background:radial-gradient(ellipse, rgba(15,74,156,0.55) 0%, transparent 70%);"></div>
+      <div style="position:absolute; top:8%; right:8%; width:48%; height:60%; border-radius:50%; background:radial-gradient(ellipse, rgba(245,124,40,0.08) 0%, transparent 70%);"></div>
+    </div>
+
+    <div class="container" style="position:relative; z-index:1;">
+
+      <div style="text-align:center; margin-bottom:48px;">
+        <div class="eyebrow reveal" style="color:rgba(255,255,255,0.62);">Need Alo's Help?</div>
+        <h2 class="reveal" style="color:#fff; margin-top:12px;">Request a Delivery</h2>
+        <p class="reveal" style="color:rgba(255,255,255,0.70); margin-top:16px; max-width:460px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.7;">
+          Fill out the form and Alo will retrieve your packages as soon as possible during service hours.
+        </p>
+      </div>
+
+      <!-- Form card -->
+      <div class="reveal" style="max-width:580px; margin:0 auto;">
+        <div class="form-wrapper" style="background:#fff; border-radius:24px; box-shadow:var(--shadow-form); padding:40px;">
+
+          <!-- Form fields -->
+          <div class="form-fields">
+            <form id="notify-form" novalidate>
+
+              <!-- First + Last Name -->
+              <div class="names-grid" style="margin-bottom:20px;">
+                <div>
+                  <label for="first-name" class="form-label">First Name</label>
+                  <input type="text" id="first-name" name="firstName" class="form-input" placeholder="Jane" required autocomplete="given-name">
+                  <div class="field-error" id="first-name-error"></div>
+                </div>
+                <div>
+                  <label for="last-name" class="form-label">Last Name</label>
+                  <input type="text" id="last-name" name="lastName" class="form-input" placeholder="Smith" required autocomplete="family-name">
+                  <div class="field-error" id="last-name-error"></div>
+                </div>
+              </div>
+
+              <!-- Email Address -->
+              <div style="margin-bottom:20px;">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="jane@example.com" required autocomplete="email">
+                <div class="field-error" id="email-error"></div>
+              </div>
+
+              <!-- Unit Number -->
+              <div style="margin-bottom:20px;">
+                <label for="unit" class="form-label">Unit Number</label>
+                <input type="text" id="unit" name="unitNumber" class="form-input" placeholder="e.g. 14B" required autocomplete="off">
+                <div class="field-error" id="unit-error"></div>
+              </div>
+
+              <!-- Service Type -->
+              <div style="margin-bottom:20px;">
+                <fieldset style="border:none; padding:0; margin:0;">
+                  <legend class="form-label" style="margin-bottom:10px; display:block; width:100%;">Service Type</legend>
+                  <div class="service-options">
+
+                    <label class="service-option">
+                      <input type="radio" name="serviceType" value="one-time">
+                      <span class="service-radio" aria-hidden="true"></span>
+                      <span>
+                        <span class="service-option-title">One-Time Delivery</span>
+                        <span class="service-option-desc">Just this once — Alo will retreive your package during the next available service window and deliver it to your door.</span>
+                      </span>
+                    </label>
+
+                    <label class="service-option">
+                      <input type="radio" name="serviceType" value="ongoing" required>
+                      <span class="service-radio" aria-hidden="true"></span>
+                      <span>
+                        <span class="service-option-title">Ongoing Service</span>
+                        <span class="service-option-desc">Alo will check for your packages during every service window and deliver them to your door — every day, until you ask him to stop.</span>
+                      </span>
+                    </label>
+
+                  </div>
+                  <div class="field-error" id="service-type-error"></div>
+                </fieldset>
+              </div>
+
+              <!-- Special Instructions -->
+              <div style="margin-bottom:28px;">
+                <label for="instructions" class="form-label">
+                  Special Instructions
+                  <span style="font-weight:400; text-transform:none; letter-spacing:normal; color:var(--ink-light); font-size:0.8rem; margin-left:5px;">(optional)</span>
+                </label>
+                <textarea id="instructions" name="specialInstructions" class="form-input" rows="3" placeholder="Food delivery, please don't knock, fragile package, etc."></textarea>
+              </div>
+
+              <button type="submit" class="btn-submit">Submit Your Request!</button>
+
+            </form>
+          </div>
+
+          <!-- Success state -->
+          <div class="form-success" aria-live="polite">
+            <div style="width:76px; height:76px; border-radius:50%; background:linear-gradient(135deg, var(--sky-pale), #d8eaff); display:flex; align-items:center; justify-content:center; margin-bottom:22px; box-shadow:0 4px 18px rgba(26,111,212,0.14);">
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none" aria-hidden="true">
+                <path d="M8 20l7 7 15-15" stroke="var(--sky)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 style="font-size:1.85rem; font-weight:700; color:var(--ink); letter-spacing:-0.025em;">Request submitted!</h3>
+            <p style="color:var(--ink-mid); margin-top:12px; font-size:1rem; line-height:1.65; max-width:320px;">You'll be notified via email when Alo retrieves a package.</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       ABOUT ME
+  ════════════════════════════════════════ -->
+  <section id="about" style="padding:96px 0; background:#fff; position:relative; overflow:hidden;">
+
+    <!-- Subtle background texture -->
+    <div aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse 70% 60% at 90% 50%, rgba(26,111,212,0.04) 0%, transparent 70%), radial-gradient(ellipse 50% 50% at 10% 80%, rgba(245,124,40,0.04) 0%, transparent 60%);"></div>
+
+    <div class="container" style="position:relative;">
+      <div class="about-grid reveal">
+
+        <!-- Text -->
+        <div>
+          <div class="eyebrow" style="margin-bottom:16px;">Meet Your Delivery Pro</div>
+          <h2 style="margin-bottom:28px;">About Me</h2>
+          <p style="font-size:1.0625rem; color:var(--ink-mid); line-height:1.75;">I'm Alo (short for Aloysius), a proud, life-long resident of Wanamaker House, and I love helping my neighbors. I'm currently a 4th Grade student at Greenfield Elementary School, just a few blocks away. In my free time, I enjoy reading, hiking, and breakdancing. I also love to go travelling with my family, and I'm starting my package delivery business so I can earn money to buy souvenirs during our trips. If you see me in the lobby, please say hello!</p>
+        </div>
+
+        <!-- Photo -->
+        <div>
+          <img src="brand_assets/Alo_Pic2.jpg" alt="Alo, your package delivery pro at Wanamaker House" class="about-photo">
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════ -->
+  <footer style="background:var(--ink); color:#fff; padding:0;">
+
+    <!-- Gradient accent line -->
+    <div style="height:3px; background:linear-gradient(90deg, var(--sky) 0%, var(--sky-light) 50%, var(--burst) 100%);"></div>
+
+    <div class="container" style="padding-top:48px; padding-bottom:28px;">
+
+      <div class="footer-inner">
+
+        <!-- Logo & description -->
+        <div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <svg width="30" height="30" viewBox="0 0 256 256" aria-hidden="true">
+              <path fill="#1A6FD4" d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15Z"/>
+              <path fill="#1A6FD4" d="M40,90l80,43.78v85.79L40,175.82Z"/>
+              <path fill="#1A6FD4" d="M216,175.78l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90Z"/>
+              <path fill="#F57C28" d="M128,32l80.34,44-29.77,16.3-80.35-44Z"/>
+              <path fill="#F57C28" d="M128,120L47.66,76l33.9-18.56 80.34,44Z"/>
+            </svg>
+            <span style="font-family:var(--font-display); font-weight:700; font-size:1.15rem; color:var(--sky-light); letter-spacing:-0.025em;">Alo's Package Delivery</span>
+          </div>
+          <p style="font-size:0.875rem; color:rgba(255,255,255,0.36); max-width:240px; line-height:1.65;">Your friendly Wanamaker House delivery pro.</p>
+        </div>
+
+        <!-- Hours summary -->
+        <div>
+          <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.12em; color:rgba(255,255,255,0.50); margin-bottom:10px;">Service Hours</div>
+          <div style="font-size:0.875rem; color:rgba(255,255,255,0.42); line-height:2;">
+            <div>Weekdays: 6:00 pm – 8:00 pm</div>
+            <div>Weekends: 8:00 am – 8:30 pm</div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <div style="font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.12em; color:rgba(255,255,255,0.50); margin-bottom:10px;">Quick Links</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <a href="#pricing" style="font-size:0.875rem; color:rgba(255,255,255,0.42); text-decoration:none; transition:color 0.18s ease;" onmouseover="this.style.color='rgba(255,255,255,0.80)'" onmouseout="this.style.color='rgba(255,255,255,0.42)'">Pricing</a>
+            <a href="#how-it-works" style="font-size:0.875rem; color:rgba(255,255,255,0.42); text-decoration:none; transition:color 0.18s ease;" onmouseover="this.style.color='rgba(255,255,255,0.80)'" onmouseout="this.style.color='rgba(255,255,255,0.42)'">How It Works</a>
+            <a href="#hours" style="font-size:0.875rem; color:rgba(255,255,255,0.42); text-decoration:none; transition:color 0.18s ease;" onmouseover="this.style.color='rgba(255,255,255,0.80)'" onmouseout="this.style.color='rgba(255,255,255,0.42)'">Service Hours</a>
+            <a href="#about" style="font-size:0.875rem; color:rgba(255,255,255,0.42); text-decoration:none; transition:color 0.18s ease;" onmouseover="this.style.color='rgba(255,255,255,0.80)'" onmouseout="this.style.color='rgba(255,255,255,0.42)'">About Me</a>
+            <a href="#notify" style="font-size:0.875rem; color:rgba(255,255,255,0.42); text-decoration:none; transition:color 0.18s ease;" onmouseover="this.style.color='rgba(255,255,255,0.80)'" onmouseout="this.style.color='rgba(255,255,255,0.42)'">Request a Delivery</a>
+          </div>
+        </div>
+
+        <!-- Signature -->
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display); font-style:italic; font-size:1.6rem; font-weight:700; color:rgba(255,255,255,0.16); letter-spacing:-0.02em; line-height:1.2;">Made with ♥</div>
+          <div style="font-size:0.8125rem; color:rgba(255,255,255,0.30); margin-top:4px;">by Alo, age 10</div>
+        </div>
+
+      </div>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.07); padding-top:20px; text-align:center; font-size:0.78rem; color:rgba(255,255,255,0.24);">
+        &copy; 2025 Alo's Package Delivery. All rights reserved.
+      </div>
+
+    </div>
+  </footer>
+
+
+  <!-- ════════════════════════════════════════
+       JAVASCRIPT
+  ════════════════════════════════════════ -->
+  <script>
+    // ── Instantly reveal elements already in viewport on load ──
+    // (no transition for above-fold content; transitions fire for scroll-revealed content)
+    document.querySelectorAll('.reveal').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight + 200) {
+        el.style.transition = 'none';
+        el.classList.add('visible');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => { el.style.transition = ''; });
+        });
+      }
+    });
+
+    // ── Nav scroll shadow ─────────────────────────
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 24);
+    }, { passive: true });
+
+    // ── Scroll reveals (IntersectionObserver) ─────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+
+        // Find siblings to stagger
+        const parent = entry.target.parentElement;
+        const siblings = Array.from(parent.querySelectorAll(':scope > .reveal'));
+        const idx = siblings.indexOf(entry.target);
+
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, idx * 90);
+
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.10, rootMargin: '0px 0px -36px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── Form submission + success animation ───────
+    const form        = document.getElementById('notify-form');
+    const formFields  = document.querySelector('.form-fields');
+    const formSuccess = document.querySelector('.form-success');
+    const formWrapper = document.querySelector('.form-wrapper');
+
+    function setFieldError(inputId, errorId, message) {
+      const input = document.getElementById(inputId);
+      const err   = document.getElementById(errorId);
+      input.classList.add('error');
+      err.textContent = message;
+      err.classList.add('show');
+    }
+
+    function clearFieldError(inputId, errorId) {
+      const input = document.getElementById(inputId);
+      const err   = document.getElementById(errorId);
+      if (input) input.classList.remove('error');
+      if (err)   err.classList.remove('show');
+    }
+
+    // Clear errors as user types / selects
+    ['first-name', 'last-name', 'email', 'unit'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => clearFieldError(id, id + '-error'));
+    });
+    document.querySelectorAll('input[name="serviceType"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.querySelector('.service-options').classList.remove('error');
+        document.getElementById('service-type-error').classList.remove('show');
+      });
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let valid = true;
+
+      const firstName = document.getElementById('first-name');
+      if (!firstName.value.trim()) {
+        setFieldError('first-name', 'first-name-error', 'Please enter your first name.');
+        valid = false;
+      } else { clearFieldError('first-name', 'first-name-error'); }
+
+      const lastName = document.getElementById('last-name');
+      if (!lastName.value.trim()) {
+        setFieldError('last-name', 'last-name-error', 'Please enter your last name.');
+        valid = false;
+      } else { clearFieldError('last-name', 'last-name-error'); }
+
+      const email    = document.getElementById('email');
+      const emailVal = email.value.trim();
+      if (!emailVal) {
+        setFieldError('email', 'email-error', 'Please enter your email address.');
+        valid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        setFieldError('email', 'email-error', 'Please enter a valid email address.');
+        valid = false;
+      } else { clearFieldError('email', 'email-error'); }
+
+      const unit = document.getElementById('unit');
+      if (!unit.value.trim()) {
+        setFieldError('unit', 'unit-error', 'Please enter your unit number.');
+        valid = false;
+      } else { clearFieldError('unit', 'unit-error'); }
+
+      const serviceType    = document.querySelector('input[name="serviceType"]:checked');
+      const serviceOptions = document.querySelector('.service-options');
+      const serviceErr     = document.getElementById('service-type-error');
+      if (!serviceType) {
+        serviceOptions.classList.add('error');
+        serviceErr.textContent = 'Please select a service type.';
+        serviceErr.classList.add('show');
+        valid = false;
+      } else {
+        serviceOptions.classList.remove('error');
+        serviceErr.classList.remove('show');
+      }
+
+      if (!valid) {
+        const firstError = form.querySelector('.field-error.show, .service-options.error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+
+      // Lock wrapper height so the absolute success div has space
+      formWrapper.style.height = formWrapper.offsetHeight + 'px';
+
+      formFields.classList.add('hide');
+
+      setTimeout(() => {
+        formSuccess.classList.add('show');
+      }, 380);
+    });
+
+  </script>
+
+</body>
+</html>

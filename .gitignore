@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Working screenshots (dev tooling only)
+temporary screenshots/
+Screenshot*.png
+
+# Node
+node_modules/
+*.log
