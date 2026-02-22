@@ -599,7 +599,7 @@
     <!-- Ongoing customers panel -->
     <div class="ongoing-card">
       <div class="ongoing-header" id="ongoing-toggle">
-        <span class="ongoing-header-title">Ongoing Service Customers</span>
+        <span class="ongoing-header-title">Customers</span>
         <svg class="ongoing-chevron" id="ongoing-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M4 7l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -646,7 +646,7 @@
     </div>
 
     <div class="modal-field">
-      <label class="modal-label" for="modal-instructions">Special Instructions <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+      <label class="modal-label" for="modal-instructions">Notes <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
       <textarea id="modal-instructions" class="modal-textarea" placeholder="e.g. left at door, fragile, etc."></textarea>
     </div>
 
@@ -866,27 +866,34 @@
   });
 
   function renderOngoingPanel() {
-    const ongoing = Object.values(allCustomers).filter(c => c.ongoingService);
+    const all = Object.values(allCustomers);
     const tbody = document.getElementById('customers-body');
-    if (ongoing.length === 0) {
+    if (all.length === 0) {
       tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">
-        <strong>No ongoing customers yet.</strong>
-        They'll appear here when a resident chooses Ongoing Service on the form.
+        <strong>No customers yet.</strong>
+        They'll appear here automatically when residents submit the form.
       </div></td></tr>`;
       return;
     }
-    tbody.innerHTML = ongoing.map(c => {
-      const isActive = c.ongoingStatus === 'active';
+    // Sort: ongoing first, then one-time; alphabetical within each group
+    all.sort((a, b) => {
+      if (a.ongoingService !== b.ongoingService) return a.ongoingService ? -1 : 1;
+      return (a.lastName || '').localeCompare(b.lastName || '');
+    });
+    tbody.innerHTML = all.map(c => {
+      const isOngoing = c.ongoingService;
+      const isActive  = c.ongoingStatus === 'active';
+      const statusCell = isOngoing
+        ? `<button class="toggle-btn ${isActive ? 'toggle-active' : 'toggle-inactive'}"
+             onclick="toggleOngoing('${c.id}', '${isActive ? 'inactive' : 'active'}')">
+             ${isActive ? '● Active' : '○ Inactive'}
+           </button>`
+        : `<span class="toggle-btn toggle-inactive" style="cursor:default;">○ Inactive</span>`;
       return `<tr>
         <td class="td-name">${esc(c.firstName + ' ' + c.lastName)}</td>
         <td class="td-unit">${esc(c.unitNumber || '—')}</td>
         <td class="td-email">${esc(c.email || '—')}</td>
-        <td>
-          <button class="toggle-btn ${isActive ? 'toggle-active' : 'toggle-inactive'}"
-            onclick="toggleOngoing('${c.id}', '${isActive ? 'inactive' : 'active'}')">
-            ${isActive ? '● Active' : '○ Inactive'}
-          </button>
-        </td>
+        <td>${statusCell}</td>
       </tr>`;
     }).join('');
   }
