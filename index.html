@@ -651,6 +651,7 @@
     .btn-submit:hover        { background: var(--burst-dark); box-shadow: var(--shadow-cta-hover); transform: translateY(-2px); }
     .btn-submit:active       { transform: translateY(0); box-shadow: var(--shadow-cta); }
     .btn-submit:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+    .btn-submit:disabled     { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: var(--shadow-cta); }
 
     /* ════════════════════════════════════════
        FORM SUCCESS STATE
@@ -1404,14 +1405,44 @@
         return;
       }
 
-      // Lock wrapper height so the absolute success div has space
-      formWrapper.style.height = formWrapper.offsetHeight + 'px';
+      // Disable button and show loading state
+      const submitBtn = form.querySelector('.btn-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
 
-      formFields.classList.add('hide');
+      const serviceTypeVal = document.querySelector('input[name="serviceType"]:checked').value;
+      const serviceTypeLabel = serviceTypeVal === 'ongoing' ? 'Ongoing Service' : 'One-Time Delivery';
 
-      setTimeout(() => {
-        formSuccess.classList.add('show');
-      }, 380);
+      fetch('https://formsubmit.co/ajax/alodubin1@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: 'New Delivery Request from ' + document.getElementById('first-name').value.trim() + ' ' + document.getElementById('last-name').value.trim() + ' (Unit ' + document.getElementById('unit').value.trim() + ')',
+          'First Name':            document.getElementById('first-name').value.trim(),
+          'Last Name':             document.getElementById('last-name').value.trim(),
+          'Email':                 document.getElementById('email').value.trim(),
+          'Unit Number':           document.getElementById('unit').value.trim(),
+          'Service Type':          serviceTypeLabel,
+          'Special Instructions':  document.getElementById('instructions').value.trim() || '(none)',
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success === 'true' || data.success === true) {
+          formWrapper.style.height = formWrapper.offsetHeight + 'px';
+          formFields.classList.add('hide');
+          setTimeout(() => { formSuccess.classList.add('show'); }, 380);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Your Request!';
+          alert('Something went wrong. Please try again.');
+        }
+      })
+      .catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Your Request!';
+        alert('Something went wrong. Please check your connection and try again.');
+      });
     });
 
   </script>
