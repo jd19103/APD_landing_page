@@ -881,25 +881,25 @@
       return (a.lastName || '').localeCompare(b.lastName || '');
     });
     tbody.innerHTML = all.map(c => {
-      const isOngoing = c.ongoingService;
-      const isActive  = c.ongoingStatus === 'active';
-      const statusCell = isOngoing
-        ? `<button class="toggle-btn ${isActive ? 'toggle-active' : 'toggle-inactive'}"
-             onclick="toggleOngoing('${c.id}', '${isActive ? 'inactive' : 'active'}')">
-             ${isActive ? '● Active' : '○ Inactive'}
-           </button>`
-        : `<span class="toggle-btn toggle-inactive" style="cursor:default;">○ Inactive</span>`;
+      const isActive = c.ongoingStatus === 'active';
       return `<tr>
         <td class="td-name">${esc(c.firstName + ' ' + c.lastName)}</td>
         <td class="td-unit">${esc(c.unitNumber || '—')}</td>
         <td class="td-email">${esc(c.email || '—')}</td>
-        <td>${statusCell}</td>
+        <td>
+          <button class="toggle-btn ${isActive ? 'toggle-active' : 'toggle-inactive'}"
+            onclick="toggleOngoing('${c.id}', '${isActive ? 'inactive' : 'active'}')">
+            ${isActive ? '● Active' : '○ Inactive'}
+          </button>
+        </td>
       </tr>`;
     }).join('');
   }
 
   function toggleOngoing(id, newStatus) {
-    db.collection('customers').doc(id).update({ ongoingStatus: newStatus });
+    const updates = { ongoingStatus: newStatus };
+    if (newStatus === 'active') updates.ongoingService = true;
+    db.collection('customers').doc(id).update(updates);
   }
 
   // ── Modal ─────────────────────────────────────────────────────
