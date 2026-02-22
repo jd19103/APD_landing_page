@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600;1,9..144,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
     /* ════════════════════════════════════════
@@ -1283,6 +1285,62 @@
        JAVASCRIPT
   ════════════════════════════════════════ -->
   <script>
+    // ── Firebase config — replace YOUR_* values after creating your Firebase project ──
+    // Setup: https://console.firebase.google.com → Add project → Web app → Firestore Database
+    const FIREBASE_CONFIG = {
+      apiKey:            "YOUR_API_KEY",
+      authDomain:        "YOUR_AUTH_DOMAIN",
+      projectId:         "YOUR_PROJECT_ID",
+      storageBucket:     "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId:             "YOUR_APP_ID"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+    } catch(e) {
+      console.warn('Firebase not configured yet — form will still send email but won\'t write to dashboard database.');
+    }
+
+    async function writeToFirestore(firstName, lastName, email, unitNumber, serviceTypeLabel, specialInstructions) {
+      if (!db) return;
+      const isOngoing = serviceTypeLabel === 'Ongoing Service';
+
+      // Find or create customer by email
+      const custSnap = await db.collection('customers').where('email', '==', email).limit(1).get();
+      let customerId;
+      if (!custSnap.empty) {
+        customerId = custSnap.docs[0].id;
+        if (isOngoing) {
+          await db.collection('customers').doc(customerId).update({ ongoingService: true, ongoingStatus: 'active' });
+        }
+      } else {
+        const ref = await db.collection('customers').add({
+          firstName, lastName, email, unitNumber,
+          ongoingService: isOngoing,
+          ongoingStatus: isOngoing ? 'active' : null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        customerId = ref.id;
+      }
+
+      // Create delivery linked to customer
+      await db.collection('deliveries').add({
+        customerId,
+        customerName: firstName + ' ' + lastName,
+        customerUnit: unitNumber,
+        customerEmail: email,
+        serviceType: serviceTypeLabel,
+        specialInstructions: specialInstructions || '(none)',
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        deliveryStatus: 'Pending',
+        deliveryFee: null,
+        paymentStatus: 'Unpaid'
+      });
+    }
+
     // ── Instantly reveal elements already in viewport on load ──
     // (no transition for above-fold content; transitions fire for scroll-revealed content)
     document.querySelectorAll('.reveal').forEach(el => {
@@ -1413,22 +1471,29 @@
       const serviceTypeVal = document.querySelector('input[name="serviceType"]:checked').value;
       const serviceTypeLabel = serviceTypeVal === 'ongoing' ? 'Ongoing Service' : 'One-Time Delivery';
 
-      fetch('https://formsubmit.co/ajax/alodubin1@gmail.com', {
+      const fnVal  = document.getElementById('first-name').value.trim();
+      const lnVal  = document.getElementById('last-name').value.trim();
+      const emVal  = document.getElementById('email').value.trim();
+      const unVal  = document.getElementById('unit').value.trim();
+      const siVal  = document.getElementById('instructions').value.trim();
+
+      const emailPromise = fetch('https://formsubmit.co/ajax/alodubin1@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: 'New Delivery Request from ' + document.getElementById('first-name').value.trim() + ' ' + document.getElementById('last-name').value.trim() + ' (Unit ' + document.getElementById('unit').value.trim() + ')',
-          'First Name':            document.getElementById('first-name').value.trim(),
-          'Last Name':             document.getElementById('last-name').value.trim(),
-          'Email':                 document.getElementById('email').value.trim(),
-          'Unit Number':           document.getElementById('unit').value.trim(),
-          'Service Type':          serviceTypeLabel,
-          'Special Instructions':  document.getElementById('instructions').value.trim() || '(none)',
+          _subject: 'New Delivery Request from ' + fnVal + ' ' + lnVal + ' (Unit ' + unVal + ')',
+          'First Name': fnVal, 'Last Name': lnVal, 'Email': emVal,
+          'Unit Number': unVal, 'Service Type': serviceTypeLabel,
+          'Special Instructions': siVal || '(none)',
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success === 'true' || data.success === true) {
+      }).then(r => r.json());
+
+      const firestorePromise = writeToFirestore(fnVal, lnVal, emVal, unVal, serviceTypeLabel, siVal);
+
+      Promise.allSettled([emailPromise, firestorePromise]).then(([emailResult]) => {
+        const emailOk = emailResult.status === 'fulfilled' &&
+          (emailResult.value?.success === true || emailResult.value?.success === 'true');
+        if (emailOk || db) {
           formWrapper.style.height = formWrapper.offsetHeight + 'px';
           formFields.classList.add('hide');
           setTimeout(() => { formSuccess.classList.add('show'); }, 380);
@@ -1437,11 +1502,6 @@
           submitBtn.textContent = 'Submit Your Request!';
           alert('Something went wrong. Please try again.');
         }
-      })
-      .catch(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit Your Request!';
-        alert('Something went wrong. Please check your connection and try again.');
       });
     });
 

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alo's Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ── Design tokens (match index.html) ─────────────────────── */
+    :root {
+      --sky:        #1A6FD4;
+      --sky-dark:   #0F4A9C;
+      --sky-light:  #5BA3F5;
+      --sky-pale:   #EBF4FF;
+      --burst:      #F57C28;
+      --burst-dark: #D4611A;
+      --ink:        #1A2233;
+      --ink-mid:    #445069;
+      --ink-light:  #8496B0;
+      --surface:    #FFFFFF;
+      --elevated:   #F4F8FF;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body:    'DM Sans', -apple-system, sans-serif;
+      --shadow-card:
+        0 1px 2px rgba(26,111,212,0.05),
+        0 4px 14px rgba(26,111,212,0.08),
+        0 18px 40px rgba(26,111,212,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--elevated);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Password gate ─────────────────────────────────────────── */
+    #gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .gate-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: var(--shadow-card);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .gate-logo { margin-bottom: 20px; display: flex; justify-content: center; }
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.025em;
+      margin-bottom: 6px;
+    }
+    .gate-sub {
+      font-size: 0.875rem;
+      color: var(--ink-light);
+      margin-bottom: 28px;
+    }
+    .gate-input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid rgba(26,111,212,0.22);
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--ink);
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .gate-input:focus { border-color: var(--sky); box-shadow: 0 0 0 3.5px rgba(26,111,212,0.14); }
+    .gate-input.shake { animation: shake 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-8px); }
+      40%      { transform: translateX(8px); }
+      60%      { transform: translateX(-6px); }
+      80%      { transform: translateX(6px); }
+    }
+    .gate-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--sky);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .gate-btn:hover  { background: var(--sky-dark); transform: translateY(-1px); }
+    .gate-btn:active { transform: translateY(0); }
+    .gate-error {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: #c0271d;
+      font-weight: 600;
+      min-height: 18px;
+    }
+
+    /* ── Dashboard layout ──────────────────────────────────────── */
+    #dashboard { display: none; }
+
+    .top-bar {
+      background: #fff;
+      border-bottom: 1px solid rgba(26,111,212,0.10);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 12px; }
+    .top-bar-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .top-bar-back {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ink-light);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.18s ease;
+    }
+    .top-bar-back:hover { color: var(--sky); }
+
+    .page-content { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+
+    /* ── KPI cards ─────────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media (min-width: 720px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      padding: 20px 22px;
+      border-top: 3px solid var(--sky);
+    }
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--ink-light);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-family: var(--font-display);
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--ink-light);
+      margin-top: 4px;
+    }
+
+    /* ── Section header ────────────────────────────────────────── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Add Delivery button ───────────────────────────────────── */
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: var(--burst);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .btn-add:hover  { background: var(--burst-dark); transform: translateY(-1px); }
+    .btn-add:active { transform: translateY(0); }
+
+    /* ── Table card ────────────────────────────────────────────── */
+    .table-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    thead th {
+      background: var(--sky-pale);
+      padding: 11px 14px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-mid);
+      white-space: nowrap;
+      border-bottom: 1px solid rgba(26,111,212,0.10);
+    }
+    tbody tr { border-bottom: 1px solid rgba(26,111,212,0.06); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #F9FBFF; }
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    tbody td.wrap { white-space: normal; min-width: 140px; max-width: 220px; }
+    .td-datetime { font-size: 0.8rem; color: var(--ink-mid); }
+    .td-name     { font-weight: 600; }
+    .td-unit     { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+    .td-email    { font-size: 0.8rem; color: var(--ink-mid); }
+    .td-service  {}
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .badge-ongoing  { background: #EDE9FE; color: #5B21B6; }
+    .badge-onetime  { background: #F0FDF4; color: #166534; }
+
+    /* ── Status selects ────────────────────────────────────────── */
+    .status-select {
+      border: none;
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238496B0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 7px center;
+      padding-right: 24px;
+      transition: opacity 0.18s ease;
+    }
+    .status-select:hover { opacity: 0.85; }
+
+    .s-pending   { background: #FEF3C7; color: #92400E; }
+    .s-delivered { background: #D1FAE5; color: #065F46; }
+    .s-cancelled { background: #F3F4F6; color: #6B7280; }
+    .s-unpaid    { background: #FEE2E2; color: #991B1B; }
+    .s-invoiced  { background: #DBEAFE; color: #1E40AF; }
+    .s-paid      { background: #D1FAE5; color: #065F46; }
+
+    /* ── Fee input ─────────────────────────────────────────────── */
+    .fee-input {
+      width: 80px;
+      padding: 5px 8px;
+      border: 1.5px solid rgba(26,111,212,0.18);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.18s ease;
+    }
+    .fee-input:focus { border-color: var(--sky); }
+
+    /* ── Save indicator ────────────────────────────────────────── */
+    .save-tick {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #065F46;
+      opacity: 0;
+      margin-left: 4px;
+      transition: opacity 0.2s ease;
+      display: inline-block;
+    }
+    .save-tick.show { opacity: 1; }
+
+    /* ── Empty state ───────────────────────────────────────────── */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--ink-light);
+      font-size: 0.9375rem;
+    }
+    .empty-state strong { display: block; font-size: 1rem; color: var(--ink-mid); margin-bottom: 4px; }
+
+    /* ── Ongoing customers panel ───────────────────────────────── */
+    .ongoing-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .ongoing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(26,111,212,0.08);
+      cursor: pointer;
+      user-select: none;
+    }
+    .ongoing-header-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .ongoing-chevron {
+      transition: transform 0.22s ease;
+      color: var(--ink-light);
+    }
+    .ongoing-chevron.open { transform: rotate(180deg); }
+    .ongoing-body { display: none; }
+    .ongoing-body.open { display: block; }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border: none;
+      border-radius: 99px;
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.18s ease;
+    }
+    .toggle-btn:hover { opacity: 0.8; }
+    .toggle-active   { background: #D1FAE5; color: #065F46; }
+    .toggle-inactive { background: #F3F4F6; color: #6B7280; }
+
+    /* ── Modal ─────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,34,51,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 80px rgba(26,34,51,0.28);
+      padding: 32px;
+      width: 100%;
+      max-width: 460px;
+      transform: translateY(16px);
+      transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .modal-label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .modal-field { margin-bottom: 16px; }
+    .modal-select, .modal-input, .modal-textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid rgba(26,111,212,0.22);
+      border-radius: 11px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      color: var(--ink);
+      outline: none;
+      background: #fff;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .modal-select:focus, .modal-input:focus, .modal-textarea:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(26,111,212,0.12);
+    }
+    .modal-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .modal-submit {
+      flex: 1;
+      padding: 12px;
+      background: var(--burst);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .modal-submit:hover  { background: var(--burst-dark); transform: translateY(-1px); }
+    .modal-submit:active { transform: translateY(0); }
+    .modal-cancel {
+      padding: 12px 20px;
+      background: var(--elevated);
+      color: var(--ink-mid);
+      border: none;
+      border-radius: 11px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s ease;
+    }
+    .modal-cancel:hover { background: #e0e8f4; }
+
+    .modal-error {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: #c0271d;
+      font-weight: 600;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PASSWORD GATE
+══════════════════════════════════════════ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <svg width="48" height="48" viewBox="0 0 256 256" aria-hidden="true">
+        <path fill="#1A6FD4" d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15Z"/>
+        <path fill="#1A6FD4" d="M40,90l80,43.78v85.79L40,175.82Z"/>
+        <path fill="#1A6FD4" d="M216,175.78l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90Z"/>
+        <path fill="#F57C28" d="M128,32l80.34,44-29.77,16.3-80.35-44Z"/>
+        <path fill="#F57C28" d="M128,120L47.66,76l33.9-18.56 80.34,44Z"/>
+      </svg>
+    </div>
+    <div class="gate-title">Alo's Dashboard</div>
+    <div class="gate-sub">Enter your password to continue</div>
+    <input type="password" id="gate-pw" class="gate-input" placeholder="Password" autocomplete="current-password">
+    <button class="gate-btn" id="gate-btn">Sign In</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════ -->
+<div id="dashboard">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden="true">
+        <path fill="#1A6FD4" d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15Z"/>
+        <path fill="#1A6FD4" d="M40,90l80,43.78v85.79L40,175.82Z"/>
+        <path fill="#1A6FD4" d="M216,175.78l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90Z"/>
+        <path fill="#F57C28" d="M128,32l80.34,44-29.77,16.3-80.35-44Z"/>
+        <path fill="#F57C28" d="M128,120L47.66,76l33.9-18.56 80.34,44Z"/>
+      </svg>
+      <span class="top-bar-title">Alo's Dashboard</span>
+    </div>
+    <a href="index.html" class="top-bar-back">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to site
+    </a>
+  </div>
+
+  <div class="page-content">
+
+    <!-- KPI cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Requests · 30 days</div>
+        <div class="kpi-value" id="kpi-requests">—</div>
+        <div class="kpi-sub">delivery requests</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Delivered · 30 days</div>
+        <div class="kpi-value" id="kpi-delivered">—</div>
+        <div class="kpi-sub">completed deliveries</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--burst);">
+        <div class="kpi-label">Revenue · 30 days</div>
+        <div class="kpi-value" id="kpi-revenue-30">—</div>
+        <div class="kpi-sub">from paid deliveries</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--burst);">
+        <div class="kpi-label">Total Earned · All Time</div>
+        <div class="kpi-value" id="kpi-revenue-all">—</div>
+        <div class="kpi-sub">from paid deliveries</div>
+      </div>
+    </div>
+
+    <!-- Deliveries table -->
+    <div class="section-header">
+      <span class="section-title">All Deliveries</span>
+      <button class="btn-add" id="add-delivery-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Add Delivery
+      </button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="deliveries-table">
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Name</th>
+              <th>Unit</th>
+              <th>Email</th>
+              <th>Service</th>
+              <th>Instructions</th>
+              <th>Delivery Status</th>
+              <th>Fee ($)</th>
+              <th>Payment</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="deliveries-body">
+            <tr><td colspan="10"><div class="empty-state"><strong>Loading…</strong></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ongoing customers panel -->
+    <div class="ongoing-card">
+      <div class="ongoing-header" id="ongoing-toggle">
+        <span class="ongoing-header-title">Ongoing Service Customers</span>
+        <svg class="ongoing-chevron" id="ongoing-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M4 7l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="ongoing-body" id="ongoing-body">
+        <div class="table-wrap">
+          <table id="customers-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Unit</th>
+                <th>Email</th>
+                <th>Ongoing Status</th>
+              </tr>
+            </thead>
+            <tbody id="customers-body">
+              <tr><td colspan="4"><div class="empty-state"><strong>No ongoing customers yet.</strong></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /dashboard -->
+
+<!-- ══════════════════════════════════════════
+     ADD DELIVERY MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">Log a Delivery</div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="modal-customer">Customer (Ongoing Service)</label>
+      <select id="modal-customer" class="modal-select">
+        <option value="">— Select a customer —</option>
+      </select>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="modal-date">Date</label>
+      <input type="date" id="modal-date" class="modal-input">
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="modal-instructions">Special Instructions <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+      <textarea id="modal-instructions" class="modal-textarea" placeholder="e.g. left at door, fragile, etc."></textarea>
+    </div>
+
+    <div class="modal-error" id="modal-error"></div>
+
+    <div class="modal-actions">
+      <button class="modal-submit" id="modal-submit">Log Delivery</button>
+      <button class="modal-cancel" id="modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Firebase config — paste your values here ──────────────────
+  // Same config as index.html
+  const FIREBASE_CONFIG = {
+    apiKey:            "YOUR_API_KEY",
+    authDomain:        "YOUR_AUTH_DOMAIN",
+    projectId:         "YOUR_PROJECT_ID",
+    storageBucket:     "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId:             "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db = firebase.firestore();
+
+  // ── Password (SHA-256 of 'alo2025') ──────────────────────────
+  // To change: compute SHA-256 of your new password and replace this value.
+  const PW_HASH = 'b2d9a1e8f3c6074d85e9b4f1a0c7d2e5f8b3a6c9d1e4f7b0a2c5d8e1f4a7b0c3';
+  // NOTE: The hash above is a placeholder. On first run the real hash will be
+  // computed from 'alo2025' and compared — set PLACEHOLDER_MODE = true for now.
+  const PLACEHOLDER_PW = 'alo2025';
+
+  async function hashString(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ── Gate logic ────────────────────────────────────────────────
+  const gate      = document.getElementById('gate');
+  const dashboard = document.getElementById('dashboard');
+  const gatePw    = document.getElementById('gate-pw');
+  const gateBtn   = document.getElementById('gate-btn');
+  const gateError = document.getElementById('gate-error');
+
+  async function tryLogin() {
+    const hash = await hashString(gatePw.value);
+    const expectedHash = await hashString(PLACEHOLDER_PW);
+    if (hash === expectedHash) {
+      sessionStorage.setItem('apd_authed', '1');
+      gate.style.display = 'none';
+      dashboard.style.display = 'block';
+      initDashboard();
+    } else {
+      gateError.textContent = 'Wrong password — try again.';
+      gatePw.classList.remove('shake');
+      void gatePw.offsetWidth; // reflow to restart animation
+      gatePw.classList.add('shake');
+      gatePw.value = '';
+      gatePw.focus();
+    }
+  }
+
+  gateBtn.addEventListener('click', tryLogin);
+  gatePw.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+  // Auto-auth from sessionStorage
+  if (sessionStorage.getItem('apd_authed') === '1') {
+    gate.style.display = 'none';
+    dashboard.style.display = 'block';
+    initDashboard();
+  }
+
+  // ── Dashboard data ────────────────────────────────────────────
+  let allCustomers = {};
+  let allDeliveries = [];
+  let saveTimers = {};
+
+  function initDashboard() {
+    // Listen to customers
+    db.collection('customers').onSnapshot(snap => {
+      allCustomers = {};
+      snap.docs.forEach(d => { allCustomers[d.id] = { id: d.id, ...d.data() }; });
+      renderOngoingPanel();
+      populateModalDropdown();
+    });
+
+    // Listen to deliveries (newest first)
+    db.collection('deliveries').orderBy('submittedAt', 'desc').onSnapshot(snap => {
+      allDeliveries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderKPIs();
+      renderTable();
+    });
+  }
+
+  // ── KPI rendering ─────────────────────────────────────────────
+  function renderKPIs() {
+    const now = Date.now();
+    const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+
+    const recent = allDeliveries.filter(d => {
+      const ts = d.submittedAt?.toMillis?.() ?? 0;
+      return ts >= cutoff;
+    });
+
+    const requests30  = recent.length;
+    const delivered30 = recent.filter(d => d.deliveryStatus === 'Delivered').length;
+    const revenue30   = recent
+      .filter(d => d.paymentStatus === 'Paid' && d.deliveryFee != null)
+      .reduce((s, d) => s + Number(d.deliveryFee), 0);
+    const revenueAll  = allDeliveries
+      .filter(d => d.paymentStatus === 'Paid' && d.deliveryFee != null)
+      .reduce((s, d) => s + Number(d.deliveryFee), 0);
+
+    document.getElementById('kpi-requests').textContent   = requests30;
+    document.getElementById('kpi-delivered').textContent  = delivered30;
+    document.getElementById('kpi-revenue-30').textContent = '$' + revenue30.toFixed(2);
+    document.getElementById('kpi-revenue-all').textContent = '$' + revenueAll.toFixed(2);
+  }
+
+  // ── Deliveries table ──────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('deliveries-body');
+    if (allDeliveries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">
+        <strong>No deliveries yet.</strong>
+        They'll appear here automatically when residents submit the form.
+      </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = allDeliveries.map(d => {
+      const dt = d.submittedAt?.toDate?.() ?? null;
+      const dateStr = dt ? dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+      const timeStr = dt ? dt.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }) : '';
+      const isOngoing = d.serviceType === 'Ongoing Service';
+      const feeVal = d.deliveryFee != null ? d.deliveryFee : '';
+      const dStatus = d.deliveryStatus || 'Pending';
+      const pStatus = d.paymentStatus  || 'Unpaid';
+
+      return `<tr data-id="${d.id}">
+        <td class="td-datetime">${dateStr}<br><span style="color:var(--ink-light);font-size:0.75rem;">${timeStr}</span></td>
+        <td class="td-name">${esc(d.customerName || '—')}</td>
+        <td class="td-unit">${esc(d.customerUnit || '—')}</td>
+        <td class="td-email">${esc(d.customerEmail || '—')}</td>
+        <td>
+          <span class="badge ${isOngoing ? 'badge-ongoing' : 'badge-onetime'}">
+            ${isOngoing ? 'Ongoing' : 'One-Time'}
+          </span>
+        </td>
+        <td class="wrap" style="font-size:0.82rem;color:var(--ink-mid);">${esc(d.specialInstructions || '—')}</td>
+        <td>
+          <select class="status-select ${statusClass(dStatus, 'delivery')}" onchange="updateDelivery('${d.id}', 'deliveryStatus', this.value, this)">
+            <option ${dStatus==='Pending'   ? 'selected' : ''}>Pending</option>
+            <option ${dStatus==='Delivered' ? 'selected' : ''}>Delivered</option>
+            <option ${dStatus==='Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </td>
+        <td>
+          <input type="number" class="fee-input" min="0" step="0.01" placeholder="—"
+            value="${feeVal}" onchange="updateDelivery('${d.id}', 'deliveryFee', this.value === '' ? null : parseFloat(this.value), this)">
+        </td>
+        <td>
+          <select class="status-select ${statusClass(pStatus, 'payment')}" onchange="updateDelivery('${d.id}', 'paymentStatus', this.value, this)">
+            <option ${pStatus==='Unpaid'   ? 'selected' : ''}>Unpaid</option>
+            <option ${pStatus==='Invoiced' ? 'selected' : ''}>Invoiced</option>
+            <option ${pStatus==='Paid'     ? 'selected' : ''}>Paid</option>
+          </select>
+        </td>
+        <td><span class="save-tick" id="tick-${d.id}">✓</span></td>
+      </tr>`;
+    }).join('');
+
+    // Re-apply select colors on render
+    tbody.querySelectorAll('select.status-select').forEach(applySelectColor);
+  }
+
+  function statusClass(val, type) {
+    if (type === 'delivery') {
+      return val === 'Delivered' ? 's-delivered' : val === 'Cancelled' ? 's-cancelled' : 's-pending';
+    }
+    return val === 'Paid' ? 's-paid' : val === 'Invoiced' ? 's-invoiced' : 's-unpaid';
+  }
+
+  function applySelectColor(sel) {
+    sel.className = 'status-select ' + statusClass(sel.value,
+      sel.querySelector('option[value]') ? 'delivery' :
+      (sel.options[0]?.text === 'Pending' ? 'delivery' : 'payment'));
+    // Simpler: re-derive from option text
+    const v = sel.value;
+    sel.className = 'status-select ' +
+      (['Pending','Delivered','Cancelled'].includes(v) ? statusClass(v,'delivery') : statusClass(v,'payment'));
+  }
+
+  function updateDelivery(id, field, value, el) {
+    clearTimeout(saveTimers[id]);
+    saveTimers[id] = setTimeout(async () => {
+      if (el.tagName === 'SELECT') applySelectColor(el);
+      await db.collection('deliveries').doc(id).update({ [field]: value });
+      const tick = document.getElementById('tick-' + id);
+      if (tick) {
+        tick.classList.add('show');
+        setTimeout(() => tick.classList.remove('show'), 1800);
+      }
+    }, 600);
+  }
+
+  // ── Ongoing customers panel ───────────────────────────────────
+  const ongoingToggle  = document.getElementById('ongoing-toggle');
+  const ongoingBody    = document.getElementById('ongoing-body');
+  const ongoingChevron = document.getElementById('ongoing-chevron');
+
+  ongoingToggle.addEventListener('click', () => {
+    ongoingBody.classList.toggle('open');
+    ongoingChevron.classList.toggle('open');
+  });
+
+  function renderOngoingPanel() {
+    const ongoing = Object.values(allCustomers).filter(c => c.ongoingService);
+    const tbody = document.getElementById('customers-body');
+    if (ongoing.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">
+        <strong>No ongoing customers yet.</strong>
+        They'll appear here when a resident chooses Ongoing Service on the form.
+      </div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = ongoing.map(c => {
+      const isActive = c.ongoingStatus === 'active';
+      return `<tr>
+        <td class="td-name">${esc(c.firstName + ' ' + c.lastName)}</td>
+        <td class="td-unit">${esc(c.unitNumber || '—')}</td>
+        <td class="td-email">${esc(c.email || '—')}</td>
+        <td>
+          <button class="toggle-btn ${isActive ? 'toggle-active' : 'toggle-inactive'}"
+            onclick="toggleOngoing('${c.id}', '${isActive ? 'inactive' : 'active'}')">
+            ${isActive ? '● Active' : '○ Inactive'}
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function toggleOngoing(id, newStatus) {
+    db.collection('customers').doc(id).update({ ongoingStatus: newStatus });
+  }
+
+  // ── Modal ─────────────────────────────────────────────────────
+  const modal        = document.getElementById('modal');
+  const modalSubmit  = document.getElementById('modal-submit');
+  const modalCancel  = document.getElementById('modal-cancel');
+  const modalError   = document.getElementById('modal-error');
+  const modalCust    = document.getElementById('modal-customer');
+  const modalDate    = document.getElementById('modal-date');
+  const modalInstr   = document.getElementById('modal-instructions');
+
+  document.getElementById('add-delivery-btn').addEventListener('click', () => {
+    // Default date to today
+    modalDate.value = new Date().toISOString().split('T')[0];
+    modalInstr.value = '';
+    modalError.textContent = '';
+    populateModalDropdown();
+    modal.classList.add('open');
+  });
+
+  function populateModalDropdown() {
+    const active = Object.values(allCustomers)
+      .filter(c => c.ongoingService && c.ongoingStatus === 'active');
+    modalCust.innerHTML = '<option value="">— Select a customer —</option>' +
+      active.map(c => `<option value="${c.id}">${esc(c.firstName + ' ' + c.lastName)} — Unit ${esc(c.unitNumber)}</option>`).join('');
+  }
+
+  function closeModal() { modal.classList.remove('open'); }
+  modalCancel.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  modalSubmit.addEventListener('click', async () => {
+    const custId = modalCust.value;
+    if (!custId) { modalError.textContent = 'Please select a customer.'; return; }
+    const c = allCustomers[custId];
+    if (!c) { modalError.textContent = 'Customer not found.'; return; }
+
+    modalError.textContent = '';
+    modalSubmit.disabled = true;
+    modalSubmit.textContent = 'Saving…';
+
+    const dateVal = modalDate.value ? new Date(modalDate.value + 'T12:00:00') : new Date();
+
+    try {
+      await db.collection('deliveries').add({
+        customerId:          custId,
+        customerName:        c.firstName + ' ' + c.lastName,
+        customerUnit:        c.unitNumber,
+        customerEmail:       c.email,
+        serviceType:         'Ongoing Service',
+        specialInstructions: modalInstr.value.trim() || '(none)',
+        submittedAt:         firebase.firestore.Timestamp.fromDate(dateVal),
+        deliveryStatus:      'Pending',
+        deliveryFee:         null,
+        paymentStatus:       'Unpaid'
+      });
+      closeModal();
+    } catch(err) {
+      modalError.textContent = 'Error saving — please try again.';
+      console.error(err);
+    } finally {
+      modalSubmit.disabled = false;
+      modalSubmit.textContent = 'Log Delivery';
+    }
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+</script>
+
+</body>
+</html>
