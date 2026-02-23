@@ -488,6 +488,41 @@
       font-weight: 600;
       min-height: 18px;
     }
+
+    /* ── Customer combobox ─────────────────────────────────────── */
+    .combobox { position: relative; }
+    .combobox-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid rgba(26,111,212,0.22);
+      border-radius: 11px;
+      box-shadow: 0 8px 32px rgba(26,34,51,0.16);
+      max-height: 216px;
+      overflow-y: auto;
+      z-index: 300;
+      display: none;
+    }
+    .combobox-dropdown.open { display: block; }
+    .combobox-option {
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      color: var(--ink);
+      transition: background 0.1s ease;
+    }
+    .combobox-option + .combobox-option { border-top: 1px solid rgba(26,111,212,0.07); }
+    .combobox-option:hover,
+    .combobox-option.kb-active { background: var(--sky-pale); }
+    .combobox-option em { font-style: normal; color: var(--sky); font-weight: 700; }
+    .combobox-empty {
+      padding: 10px 14px;
+      color: var(--ink-light);
+      font-size: 0.875rem;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -634,15 +669,40 @@
     <div class="modal-title">Log a Delivery</div>
 
     <div class="modal-field">
-      <label class="modal-label" for="modal-customer">Customer (Ongoing Service)</label>
-      <select id="modal-customer" class="modal-select">
-        <option value="">— Select a customer —</option>
-      </select>
+      <label class="modal-label" for="modal-customer-input">Customer</label>
+      <div class="combobox">
+        <input type="text" id="modal-customer-input" class="modal-input"
+               placeholder="Search by name or unit…" autocomplete="off" spellcheck="false">
+        <input type="hidden" id="modal-customer" value="">
+        <div class="combobox-dropdown" id="customer-dropdown"></div>
+      </div>
     </div>
 
     <div class="modal-field">
       <label class="modal-label" for="modal-date">Date</label>
       <input type="date" id="modal-date" class="modal-input">
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="modal-delivery-status">Delivery Status</label>
+      <select id="modal-delivery-status" class="modal-select">
+        <option value="Pending">Pending</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <div class="modal-field">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="modal-label" for="modal-fee">Fee ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+          <input type="number" id="modal-fee" class="modal-input" min="0" step="0.01" placeholder="—">
+        </div>
+        <div>
+          <label class="modal-label" for="modal-tip">Tip ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+          <input type="number" id="modal-tip" class="modal-input" min="0" step="0.01" placeholder="—">
+        </div>
+      </div>
     </div>
 
     <div class="modal-field">
@@ -906,31 +966,129 @@
   }
 
   // ── Modal ─────────────────────────────────────────────────────
-  const modal        = document.getElementById('modal');
-  const modalSubmit  = document.getElementById('modal-submit');
-  const modalCancel  = document.getElementById('modal-cancel');
-  const modalError   = document.getElementById('modal-error');
-  const modalCust    = document.getElementById('modal-customer');
-  const modalDate    = document.getElementById('modal-date');
-  const modalInstr   = document.getElementById('modal-instructions');
+  const modal               = document.getElementById('modal');
+  const modalSubmit         = document.getElementById('modal-submit');
+  const modalCancel         = document.getElementById('modal-cancel');
+  const modalError          = document.getElementById('modal-error');
+  const modalCust           = document.getElementById('modal-customer');       // hidden value
+  const modalCustInput      = document.getElementById('modal-customer-input'); // text input
+  const custDropdown        = document.getElementById('customer-dropdown');
+  const modalDate           = document.getElementById('modal-date');
+  const modalDeliveryStatus = document.getElementById('modal-delivery-status');
+  const modalFee            = document.getElementById('modal-fee');
+  const modalTip            = document.getElementById('modal-tip');
+  const modalInstr          = document.getElementById('modal-instructions');
+
+  // ── Customer combobox ─────────────────────────────────────────
+  let customerList = [];
+  let kbActiveIndex = -1;
+
+  function populateModalDropdown() {
+    customerList = Object.values(allCustomers)
+      .sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '') || (a.firstName || '').localeCompare(b.firstName || ''));
+  }
+
+  function highlightMatch(raw, q) {
+    if (!q) return esc(raw);
+    const idx = raw.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return esc(raw);
+    return esc(raw.slice(0, idx))
+      + '<em>' + esc(raw.slice(idx, idx + q.length)) + '</em>'
+      + esc(raw.slice(idx + q.length));
+  }
+
+  function renderCustDropdown(query) {
+    const q = query.trim();
+    const filtered = q
+      ? customerList.filter(c =>
+          (c.firstName + ' ' + c.lastName).toLowerCase().includes(q.toLowerCase()) ||
+          (c.unitNumber || '').toLowerCase().includes(q.toLowerCase()))
+      : customerList;
+
+    if (filtered.length === 0) {
+      custDropdown.innerHTML = '<div class="combobox-empty">No customers found</div>';
+    } else {
+      custDropdown.innerHTML = filtered.map(c => {
+        const nameRaw = c.firstName + ' ' + c.lastName;
+        return `<div class="combobox-option" data-id="${c.id}">
+          ${highlightMatch(nameRaw, q)}
+          <span style="color:var(--ink-light);"> — Unit ${esc(c.unitNumber || '—')}</span>
+        </div>`;
+      }).join('');
+    }
+    custDropdown.classList.add('open');
+    kbActiveIndex = -1;
+  }
+
+  function updateKbActive() {
+    const opts = custDropdown.querySelectorAll('.combobox-option');
+    opts.forEach((el, i) => {
+      el.classList.toggle('kb-active', i === kbActiveIndex);
+      if (i === kbActiveIndex) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function closeCustDropdown() {
+    custDropdown.classList.remove('open');
+    kbActiveIndex = -1;
+  }
+
+  function pickCustomer(id) {
+    const c = allCustomers[id];
+    if (!c) return;
+    modalCust.value = id;
+    modalCustInput.value = c.firstName + ' ' + c.lastName + ' — Unit ' + (c.unitNumber || '—');
+    closeCustDropdown();
+  }
+
+  modalCustInput.addEventListener('input', () => {
+    modalCust.value = ''; // clear selection while typing
+    renderCustDropdown(modalCustInput.value);
+  });
+  modalCustInput.addEventListener('focus', () => renderCustDropdown(modalCustInput.value));
+  modalCustInput.addEventListener('blur',  () => setTimeout(closeCustDropdown, 150));
+
+  modalCustInput.addEventListener('keydown', e => {
+    if (!custDropdown.classList.contains('open')) return;
+    const opts = custDropdown.querySelectorAll('.combobox-option');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      kbActiveIndex = Math.min(kbActiveIndex + 1, opts.length - 1);
+      updateKbActive();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      kbActiveIndex = Math.max(kbActiveIndex - 1, 0);
+      updateKbActive();
+    } else if (e.key === 'Enter' && kbActiveIndex >= 0) {
+      e.preventDefault();
+      const active = opts[kbActiveIndex];
+      if (active) pickCustomer(active.dataset.id);
+    } else if (e.key === 'Escape') {
+      closeCustDropdown();
+    }
+  });
+
+  custDropdown.addEventListener('mousedown', e => {
+    const opt = e.target.closest('.combobox-option');
+    if (opt) { e.preventDefault(); pickCustomer(opt.dataset.id); }
+  });
 
   document.getElementById('add-delivery-btn').addEventListener('click', () => {
-    // Default date to today
+    modalCustInput.value = '';
+    modalCust.value = '';
+    closeCustDropdown();
     modalDate.value = new Date().toISOString().split('T')[0];
+    modalDeliveryStatus.value = 'Pending';
+    modalFee.value = '';
+    modalTip.value = '';
     modalInstr.value = '';
     modalError.textContent = '';
     populateModalDropdown();
     modal.classList.add('open');
+    setTimeout(() => modalCustInput.focus(), 50);
   });
 
-  function populateModalDropdown() {
-    const active = Object.values(allCustomers)
-      .filter(c => c.ongoingService && c.ongoingStatus === 'active');
-    modalCust.innerHTML = '<option value="">— Select a customer —</option>' +
-      active.map(c => `<option value="${c.id}">${esc(c.firstName + ' ' + c.lastName)} — Unit ${esc(c.unitNumber)}</option>`).join('');
-  }
-
-  function closeModal() { modal.classList.remove('open'); }
+  function closeModal() { modal.classList.remove('open'); closeCustDropdown(); }
   modalCancel.addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
@@ -952,11 +1110,12 @@
         customerName:        c.firstName + ' ' + c.lastName,
         customerUnit:        c.unitNumber,
         customerEmail:       c.email,
-        serviceType:         'Ongoing Service',
+        serviceType:         c.ongoingService ? 'Ongoing Service' : 'One-Time Delivery',
         specialInstructions: modalInstr.value.trim() || '(none)',
         submittedAt:         firebase.firestore.Timestamp.fromDate(dateVal),
-        deliveryStatus:      'Pending',
-        deliveryFee:         null,
+        deliveryStatus:      modalDeliveryStatus.value,
+        deliveryFee:         modalFee.value !== '' ? parseFloat(modalFee.value) : null,
+        tipAmount:           modalTip.value !== '' ? parseFloat(modalTip.value) : null,
         paymentStatus:       'Unpaid'
       });
       closeModal();
