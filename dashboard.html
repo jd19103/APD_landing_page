@@ -581,10 +581,10 @@
               <th>Name</th>
               <th>Unit</th>
               <th>Email</th>
-              <th>Service</th>
               <th>Instructions</th>
               <th>Delivery Status</th>
               <th>Fee ($)</th>
+              <th>Tip ($)</th>
               <th>Payment</th>
               <th></th>
             </tr>
@@ -755,12 +755,16 @@
 
     const requests30  = recent.length;
     const delivered30 = recent.filter(d => d.deliveryStatus === 'Delivered').length;
-    const revenue30   = recent
-      .filter(d => d.paymentStatus === 'Paid' && d.deliveryFee != null)
-      .reduce((s, d) => s + Number(d.deliveryFee), 0);
-    const revenueAll  = allDeliveries
-      .filter(d => d.paymentStatus === 'Paid' && d.deliveryFee != null)
-      .reduce((s, d) => s + Number(d.deliveryFee), 0);
+    const revenue30  = recent.reduce((s, d) => {
+      const fee = d.paymentStatus === 'Paid' ? Number(d.deliveryFee ?? 0) : 0;
+      const tip = Number(d.tipAmount ?? 0);
+      return s + fee + tip;
+    }, 0);
+    const revenueAll = allDeliveries.reduce((s, d) => {
+      const fee = d.paymentStatus === 'Paid' ? Number(d.deliveryFee ?? 0) : 0;
+      const tip = Number(d.tipAmount ?? 0);
+      return s + fee + tip;
+    }, 0);
 
     document.getElementById('kpi-requests').textContent   = requests30;
     document.getElementById('kpi-delivered').textContent  = delivered30;
@@ -783,8 +787,8 @@
       const dt = d.submittedAt?.toDate?.() ?? null;
       const dateStr = dt ? dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
       const timeStr = dt ? dt.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }) : '';
-      const isOngoing = d.serviceType === 'Ongoing Service';
       const feeVal = d.deliveryFee != null ? d.deliveryFee : '';
+      const tipVal = d.tipAmount   != null ? d.tipAmount   : '';
       const dStatus = d.deliveryStatus || 'Pending';
       const pStatus = d.paymentStatus  || 'Unpaid';
 
@@ -793,11 +797,6 @@
         <td class="td-name">${esc(d.customerName || '—')}</td>
         <td class="td-unit">${esc(d.customerUnit || '—')}</td>
         <td class="td-email">${esc(d.customerEmail || '—')}</td>
-        <td>
-          <span class="badge ${isOngoing ? 'badge-ongoing' : 'badge-onetime'}">
-            ${isOngoing ? 'Ongoing' : 'One-Time'}
-          </span>
-        </td>
         <td class="wrap" style="font-size:0.82rem;color:var(--ink-mid);">${esc(d.specialInstructions || '—')}</td>
         <td>
           <select class="status-select ${statusClass(dStatus, 'delivery')}" onchange="updateDelivery('${d.id}', 'deliveryStatus', this.value, this)">
@@ -809,6 +808,10 @@
         <td>
           <input type="number" class="fee-input" min="0" step="0.01" placeholder="—"
             value="${feeVal}" onchange="updateDelivery('${d.id}', 'deliveryFee', this.value === '' ? null : parseFloat(this.value), this)">
+        </td>
+        <td>
+          <input type="number" class="fee-input" min="0" step="0.01" placeholder="—"
+            value="${tipVal}" onchange="updateDelivery('${d.id}', 'tipAmount', this.value === '' ? null : parseFloat(this.value), this)">
         </td>
         <td>
           <select class="status-select ${statusClass(pStatus, 'payment')}" onchange="updateDelivery('${d.id}', 'paymentStatus', this.value, this)">
