@@ -618,6 +618,7 @@
               <th>Email</th>
               <th>Instructions</th>
               <th>Delivery Status</th>
+              <th>Packages</th>
               <th>Fee ($)</th>
               <th>Tip ($)</th>
               <th>Payment</th>
@@ -625,7 +626,7 @@
             </tr>
           </thead>
           <tbody id="deliveries-body">
-            <tr><td colspan="10"><div class="empty-state"><strong>Loading…</strong></div></td></tr>
+            <tr><td colspan="11"><div class="empty-state"><strong>Loading…</strong></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -693,13 +694,17 @@
     </div>
 
     <div class="modal-field">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div>
-          <label class="modal-label" for="modal-fee">Fee ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+          <label class="modal-label" for="modal-packages">Packages</label>
+          <input type="number" id="modal-packages" class="modal-input" min="1" step="1" placeholder="—">
+        </div>
+        <div>
+          <label class="modal-label" for="modal-fee">Fee ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(opt.)</span></label>
           <input type="number" id="modal-fee" class="modal-input" min="0" step="0.01" placeholder="—">
         </div>
         <div>
-          <label class="modal-label" for="modal-tip">Tip ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(optional)</span></label>
+          <label class="modal-label" for="modal-tip">Tip ($) <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--ink-light);">(opt.)</span></label>
           <input type="number" id="modal-tip" class="modal-input" min="0" step="0.01" placeholder="—">
         </div>
       </div>
@@ -836,7 +841,7 @@
   function renderTable() {
     const tbody = document.getElementById('deliveries-body');
     if (allDeliveries.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">
+      tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">
         <strong>No deliveries yet.</strong>
         They'll appear here automatically when residents submit the form.
       </div></td></tr>`;
@@ -847,8 +852,9 @@
       const dt = d.submittedAt?.toDate?.() ?? null;
       const dateStr = dt ? dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
       const timeStr = dt ? dt.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }) : '';
-      const feeVal = d.deliveryFee != null ? d.deliveryFee : '';
-      const tipVal = d.tipAmount   != null ? d.tipAmount   : '';
+      const pkgsVal = d.packages    != null ? d.packages    : '';
+      const feeVal  = d.deliveryFee != null ? d.deliveryFee : '';
+      const tipVal  = d.tipAmount   != null ? d.tipAmount   : '';
       const dStatus = d.deliveryStatus || 'Pending';
       const pStatus = d.paymentStatus  || 'Unpaid';
 
@@ -864,6 +870,10 @@
             <option ${dStatus==='Delivered' ? 'selected' : ''}>Delivered</option>
             <option ${dStatus==='Cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
+        </td>
+        <td>
+          <input type="number" class="fee-input" min="1" step="1" placeholder="—" style="width:64px;"
+            value="${pkgsVal}" onchange="updatePackages('${d.id}', this.value === '' ? null : parseInt(this.value, 10), this)">
         </td>
         <td>
           <input type="number" class="fee-input" min="0" step="0.01" placeholder="—"
@@ -916,6 +926,19 @@
         setTimeout(() => tick.classList.remove('show'), 1800);
       }
     }, 600);
+  }
+
+  function updatePackages(id, value, el) {
+    updateDelivery(id, 'packages', value, el);
+    // Auto-fill fee if currently empty
+    if (value !== null) {
+      const feeTd = el.closest('td')?.nextElementSibling;
+      const feeInput = feeTd?.querySelector('input');
+      if (feeInput && feeInput.value === '') {
+        feeInput.value = value;
+        updateDelivery(id, 'deliveryFee', value, feeInput);
+      }
+    }
   }
 
   // ── Ongoing customers panel ───────────────────────────────────
@@ -975,6 +998,7 @@
   const custDropdown        = document.getElementById('customer-dropdown');
   const modalDate           = document.getElementById('modal-date');
   const modalDeliveryStatus = document.getElementById('modal-delivery-status');
+  const modalPkgs           = document.getElementById('modal-packages');
   const modalFee            = document.getElementById('modal-fee');
   const modalTip            = document.getElementById('modal-tip');
   const modalInstr          = document.getElementById('modal-instructions');
@@ -1073,12 +1097,20 @@
     if (opt) { e.preventDefault(); pickCustomer(opt.dataset.id); }
   });
 
+  // Auto-fill fee from packages when fee is empty
+  modalPkgs.addEventListener('input', () => {
+    if (modalFee.value === '' && modalPkgs.value !== '') {
+      modalFee.value = parseInt(modalPkgs.value, 10);
+    }
+  });
+
   document.getElementById('add-delivery-btn').addEventListener('click', () => {
     modalCustInput.value = '';
     modalCust.value = '';
     closeCustDropdown();
     modalDate.value = new Date().toISOString().split('T')[0];
     modalDeliveryStatus.value = 'Pending';
+    modalPkgs.value = '';
     modalFee.value = '';
     modalTip.value = '';
     modalInstr.value = '';
@@ -1114,6 +1146,7 @@
         specialInstructions: modalInstr.value.trim() || '(none)',
         submittedAt:         firebase.firestore.Timestamp.fromDate(dateVal),
         deliveryStatus:      modalDeliveryStatus.value,
+        packages:            modalPkgs.value !== '' ? parseInt(modalPkgs.value, 10) : null,
         deliveryFee:         modalFee.value !== '' ? parseFloat(modalFee.value) : null,
         tipAmount:           modalTip.value !== '' ? parseFloat(modalTip.value) : null,
         paymentStatus:       'Unpaid'
